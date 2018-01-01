@@ -23,7 +23,19 @@ class NewsItemController extends Controller
 
     public function index()
     {
-        return view('news.index');
+        $page = isset($_GET['p'])?$_GET['p']:0;
+        $items = $this->model->paginate(3,$page,'created_at');
+        $count = count($this->model->get());
+        foreach ($items as $item) {
+            $images = $this->image_model->get(['item_id' => $item->id]);
+            $item->images = objectToArray($images);
+        }
+
+        if (count($items) == 0) {
+            return redirect(404);
+        }
+
+        return view('news.index', compact('items', 'count'));
     }
 
     public function create()
@@ -55,30 +67,41 @@ class NewsItemController extends Controller
 
     public function show($id)
     {
-        return view('news.show');
+        $item = $this->model->get($id);
+        //should use JOIN instead when implemented
+        $images = $this->image_model->get(['item_id' => $id]);
+        $item = count($item)? $item[0]:$item;
+
+        if (count($item)) {
+            $images = objectToArray($images);
+            return view('news.show', compact('item', 'images'));
+        }
+        return redirect(404);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
-        //
+        $item = $this->model->get($id);
+        $item = count($item)? $item[0]:$item;
+
+        if (count($item)) {
+            return view('news.edit', compact('item'));
+        }
+        return redirect(404);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
-        //
+        if ($request->has('remove')) {
+            // delete old images when delete is implemented
+        }
+        $updated = $this->model->update($request->all(), ['id' => $id]);
+
+        if ($updated) {
+            return redirect()->route('news.show', $id)
+            ->with('flash_message', 'News Item Created Successfully');
+        }
+        return back()->withErrors('something went wrong');
     }
 
     /**

@@ -17,7 +17,6 @@ class CreateNewsItemsTable extends Migration
             $table->increments('id');
             $table->string('title');
             $table->text('description');
-            $table->text('images')->nullable();
             $table->integer('user_id');
             $table->integer('view_count')->default(0);
             $table->timestamp('created_at');
