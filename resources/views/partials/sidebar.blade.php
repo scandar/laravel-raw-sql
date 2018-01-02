@@ -3,13 +3,13 @@
         <ul>
             <li>
                 <a href="{{route('news.index')}}">
-                    Latest News
+                    Home
                 </a>
             </li>
 
             <li>
                 <a href="{{route('news.create')}}">
-                    Add a News Item
+                    Add Item
                 </a>
             </li>
 

@@ -1,22 +1,32 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="col-md-8">
-        @isset($item)
-            @if (Auth::user()->role->name == 'admin')
-                <div style="margin:15px;">
-                    <a href="{{route('news.edit', $item->id)}}" class="btn btn-sm btn-primary">Edit</a>
+    @isset($item)
+        <div class="col-md-8">
+            <div class="row">
 
-                        {!! Form::open([
-                            'route'  =>['news.destroy', $item->id],
-                            'method' => 'DELETE',
-                            'style' => 'display:inline'
-                            ]) !!}
-                            {!! Form::submit('Delete', ['class' => 'btn btn-danger btn-sm']) !!}
-                        {!! Form::close() !!}
-
+                <div class="col-md-6">
+                    <h4>author: {{$item->author}}</h4>
                 </div>
-            @endif
+                @if (Auth::user()->role->name == 'admin')
+                    <div class="col-md-6">
+
+                        <div class="pull-right">
+                            <a href="{{route('news.edit', $item->id)}}" class="btn btn-sm btn-primary">Edit</a>
+
+                            {!! Form::open([
+                                'route'  =>['news.destroy', $item->id],
+                                'method' => 'DELETE',
+                                'style' => 'display:inline'
+                                ]) !!}
+                                {!! Form::submit('Delete', ['class' => 'btn btn-danger btn-sm']) !!}
+                                {!! Form::close() !!}
+
+                        </div>
+                    </div>
+                    @endif
+            </div>
+
             <div class="panel panel-default">
                 <div class="panel-heading text-center">
                     <div class="text-center">
@@ -29,8 +39,8 @@
                         </small>
                         <small>Views: {{$item->view_count}}</small>
                     </div>
-
                 </div>
+
                 <div class="panel-body">
                     @if (count($images))
                         <div class="thumbnail">
@@ -56,6 +66,6 @@
                     @endif
                 </div>
             </div>
-        @endisset
-    </div>
+        </div>
+    @endisset
 @endsection

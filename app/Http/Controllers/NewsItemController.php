@@ -32,10 +32,6 @@ class NewsItemController extends Controller
             $item->images = objectToArray($images);
         }
 
-        if (count($items) == 0) {
-            return redirect(404);
-        }
-
         return view('news.index', compact('items', 'count'));
     }
 
@@ -80,6 +76,10 @@ class NewsItemController extends Controller
         //should use JOIN instead when implemented
         $images = $this->image_model->get(['item_id' => $id])->execute();
         $item = count($item)? $item[0]:$item;
+
+        if ($author = DB::select("SELECT name FROM users WHERE id = ?", [$item->user_id])) {
+            $item->author = $author[0]->name;
+        }
 
         if (count($item)) {
             $images = objectToArray($images);

@@ -35,7 +35,7 @@
                     </div>
             @endforeach
         @else
-            <h1 class="text-center">No Data :(</h1>
+            <h1 class="text-center">nothing to show here...</h1>
         @endif
 
         @include('partials.pagination')
