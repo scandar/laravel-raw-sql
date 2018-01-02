@@ -130,6 +130,36 @@ class NewsItemController extends Controller
         return back()->withErrors('something went wrong');
     }
 
+    public function searchIndex()
+    {
+        return view('news.search.index');
+    }
+
+    public function searchByTitle(Request $request)
+    {
+        $page = isset($_GET['p'])?$_GET['p']:0;
+        $items = $this->model->search('title', $request->title);
+
+        foreach ($items as $item) {
+            $images = $this->image_model->get(['item_id' => $item->id]);
+            $item->images = objectToArray($images);
+        }
+        return view('news.index', compact('items'));
+    }
+
+    public function searchByDateRange(Request $request)
+    {
+        $from = Carbon::createFromFormat('Y-m-d', $request->from)->format('Y-m-d H:i:s');
+        $to = Carbon::createFromFormat('Y-m-d', $request->to)->format('Y-m-d H:i:s');
+        $items = $this->model->searchDate($from,$to);
+
+        foreach ($items as $item) {
+            $images = $this->image_model->get(['item_id' => $item->id]);
+            $item->images = objectToArray($images);
+        }
+        return view('news.index', compact('items'));
+    }
+
     private function addImages($image, $item_id)
     {
        // move item to storage

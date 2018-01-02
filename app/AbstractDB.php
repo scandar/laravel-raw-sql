@@ -137,6 +137,50 @@ abstract class AbstractDB
         return $data;
     }
 
+    public function search($key,$val)
+    {
+        $query = "SELECT * FROM $this->table_name WHERE $key LIKE :$key";
+
+        try {
+            $data = DB::select(DB::raw($query), [$key => '%'.$val.'%']);
+        } catch (Exception $e) {
+            return false;
+        }
+        return $data;
+    }
+
+    public function select(array $arr)
+    {
+        $query = "SELECT * FROM $this->table_name WHERE id IN (";
+
+        for ($i=0; $i < count($arr); $i++) {
+            $query .= '?, ';
+        }
+        $query = rtrim($query, ', ').")";
+
+        try {
+            $data = DB::select(DB::raw($query), $arr);
+        } catch (Exception $e) {
+            return false;
+        }
+        return $data;
+    }
+
+    public function searchDate($from,$to)
+    {
+        $query = "SELECT * FROM $this->table_name WHERE created_at BETWEEN :frm AND :to ORDER BY created_at DESC";
+
+        try {
+            $data = DB::select(DB::raw($query), [
+                'frm' => $from,
+                'to'=> $to,
+            ]);
+        } catch (Exception $e) {
+            return false;
+        }
+        return $data;
+    }
+
     protected function setTable($name)
     {
         $this->table_name = $name;

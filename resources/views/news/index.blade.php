@@ -36,6 +36,9 @@
                                 </div>
                             </div>
                     @endforeach
+
+                    @else
+                        <h1 class="text-center">No Data :(</h1>
                 @endif
 
                 @include('partials.pagination')
