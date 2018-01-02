@@ -109,6 +109,19 @@ abstract class AbstractDB
         return $data;
     }
 
+    public function delete($id)
+    {
+        // building query
+        $query = "DELETE FROM $this->table_name WHERE id = $id";
+        // deleting from db
+        try {
+            DB::select(DB::raw($query));
+        } catch (Exception $e) {
+            return false;
+        }
+        return true;
+    }
+
     public function paginate(int $quantity, int $page = 0, $order = 'id')
     {
         // determine offset count

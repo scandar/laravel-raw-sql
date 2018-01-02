@@ -17,6 +17,7 @@ class NewsItemController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('isAdmin')->only('edit', 'destroy', 'update');
         $this->model = new NewsItem;
         $this->image_model = new Image;
     }
@@ -45,6 +46,11 @@ class NewsItemController extends Controller
 
     public function store(Request $request)
     {
+        // validate input
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:10000',
+        ]);
         $request->request->set('user_id', Auth::user()->id);
         $request->request->set('created_at', Carbon::now()->format('Y-m-d H:i:s'));
 
@@ -74,6 +80,11 @@ class NewsItemController extends Controller
 
         if (count($item)) {
             $images = objectToArray($images);
+
+            //increment view count
+            $this->model->update([
+                'view_count' => $item->view_count+1
+            ], ['id' => $id]);
             return view('news.show', compact('item', 'images'));
         }
         return redirect(404);
@@ -92,6 +103,12 @@ class NewsItemController extends Controller
 
     public function update(Request $request, $id)
     {
+        // validate input
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:10000',
+        ]);
+
         if ($request->has('remove')) {
             // delete old images when delete is implemented
         }
@@ -104,15 +121,13 @@ class NewsItemController extends Controller
         return back()->withErrors('something went wrong');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
-        //
+        if ($this->model->delete($id)) {
+            return redirect()->route('news.index')
+            ->with('flash_message', 'Deleted Successfully');
+        }
+        return back()->withErrors('something went wrong');
     }
 
     private function addImages($image, $item_id)

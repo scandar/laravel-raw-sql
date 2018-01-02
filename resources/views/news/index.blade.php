@@ -30,7 +30,7 @@
                                     <p>
                                         {{substr($item->description, 0,99)}}
                                         <a href="{{route('news.show', $item->id)}}">
-                                            read more..
+                                            read more...
                                         </a>
                                     </p>
                                 </div>
@@ -38,33 +38,7 @@
                     @endforeach
                 @endif
 
-                @isset($count)
-                    @php
-                        $x = 0;
-                        if (count($items) != 0) {
-                            $x = $count / count($items);
-                        }
-                    @endphp
-                    <nav aria-label="Page navigation">
-                      <ul class="pagination">
-                        <li>
-                          <a href="?p=0" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                          </a>
-                        </li>
-                            @for ($i=0; $i < $x-1; $i++)
-                                <li>
-                                    <a href="?p={{$i+1}}">{{$i+1}}</a>
-                                </li>
-                            @endfor
-                        <li>
-                          <a href="#" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                          </a>
-                        </li>
-                      </ul>
-                    </nav>
-                @endisset
+                @include('partials.pagination')
             </div>
         </div>
     </div>

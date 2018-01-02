@@ -5,15 +5,33 @@
         <div class="row">
             <div class="col-md-8 col-md-offset-2">
                 @isset($item)
+                    @if (Auth::user()->role->name == 'admin')
+                        <div style="margin:15px;">
+                            <a href="{{route('news.edit', $item->id)}}" class="btn btn-sm btn-primary">Edit</a>
+
+                                {!! Form::open([
+                                    'route'  =>['news.destroy', $item->id],
+                                    'method' => 'DELETE',
+                                    'style' => 'display:inline'
+                                    ]) !!}
+                                    {!! Form::submit('Delete', ['class' => 'btn btn-danger btn-sm']) !!}
+                                {!! Form::close() !!}
+
+                        </div>
+                    @endif
                     <div class="panel panel-default">
                         <div class="panel-heading text-center">
-                            <h1>
-                                {{$item->title}}
-                            </h1>
-                            <small>
-                                created at:
-                                 {{Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->diffForHumans()}}
-                             </small>
+                            <div class="text-center">
+                                <h1>
+                                    {{$item->title}}
+                                </h1>
+                                <small>
+                                    created at:
+                                    {{Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->diffForHumans()}}
+                                </small>
+                                <small>Views: {{$item->view_count}}</small>
+                            </div>
+
                         </div>
                         <div class="panel-body">
                             @if (count($images))

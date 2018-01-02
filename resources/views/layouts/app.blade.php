@@ -70,6 +70,7 @@
                 </div>
             </div>
         </nav>
+        @include('errors.list')
 
         @yield('content')
     </div>
