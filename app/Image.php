@@ -2,9 +2,9 @@
 
 namespace App;
 
-use App\AbstractDB;
+use App\DBModel;
 
-class Image extends AbstractDB
+class Image extends DBModel
 {
     protected $fillable = ['path','item_id'];
 

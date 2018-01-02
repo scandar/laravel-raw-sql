@@ -2,9 +2,9 @@
 
 namespace App;
 
-use App\AbstractDB;
+use App\DBModel;
 
-class NewsItem extends AbstractDB
+class NewsItem extends DBModel
 {
     protected $fillable = [
         'title',
