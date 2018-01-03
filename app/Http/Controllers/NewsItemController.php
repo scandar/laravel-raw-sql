@@ -16,24 +16,24 @@ class NewsItemController extends Controller
 
     public function __construct()
     {
+        // set middlewares
         $this->middleware('auth');
         $this->middleware('isAdmin')->only('edit', 'destroy', 'update');
+
+        // instantiate models
         $this->model = new NewsItem;
         $this->image_model = new Image;
     }
 
     public function index()
     {
+        // fetch and paginate data
         $page = isset($_GET['p'])?$_GET['p']:0;
-        $items = $this->model->paginate(3,$page,'created_at');
-        $count = count($this->model->get());
+        $items = $this->model->get()->paginate(3,$page,'created_at')->execute();
+        $count = count($this->model->get()->execute());
         foreach ($items as $item) {
-            $images = $this->image_model->get(['item_id' => $item->id]);
+            $images = $this->image_model->get(['item_id' => $item->id])->execute();
             $item->images = objectToArray($images);
-        }
-
-        if (count($items) == 0) {
-            return redirect(404);
         }
 
         return view('news.index', compact('items', 'count'));
@@ -51,12 +51,14 @@ class NewsItemController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:10000',
         ]);
+        // set additional data
         $request->request->set('user_id', Auth::user()->id);
         $request->request->set('created_at', Carbon::now()->format('Y-m-d H:i:s'));
-
         $item_id = $this->model->insert($request->all());
-        if ($item_id) {
 
+
+        if ($item_id) {
+            // insert images
             if ($request->hasFile('images')) {
                $images = $request->file('images');
                foreach ($images as $image) {
@@ -73,12 +75,27 @@ class NewsItemController extends Controller
 
     public function show($id)
     {
-        $item = $this->model->get($id);
+        // validate id
+        if (!is_numeric($id)) {
+            return redirect(404);
+        }
+        $item = $this->model->get($id)->execute();
         //should use JOIN instead when implemented
-        $images = $this->image_model->get(['item_id' => $id]);
+        //get images
+        $images = $this->image_model->get(['item_id' => $id])->execute();
+        // get item count - used to view pagination buttons
         $item = count($item)? $item[0]:$item;
 
         if (count($item)) {
+            //get author name
+            $author = DB::select("SELECT name FROM users WHERE id = ?", [$item->user_id]);
+            if (count($author)) {
+                $item->author = $author[0]->name;
+            }
+        }
+
+        if (count($item)) {
+            // convert to array using helper objectToArray()
             $images = objectToArray($images);
 
             //increment view count
@@ -92,7 +109,12 @@ class NewsItemController extends Controller
 
     public function edit($id)
     {
-        $item = $this->model->get($id);
+        // validate id
+        if (!is_numeric($id)) {
+            return redirect(404);
+        }
+        // get item
+        $item = $this->model->get($id)->execute();
         $item = count($item)? $item[0]:$item;
 
         if (count($item)) {
@@ -109,21 +131,35 @@ class NewsItemController extends Controller
             'description' => 'required|string|max:10000',
         ]);
 
-        if ($request->has('remove')) {
-            // delete old images when delete is implemented
-        }
         $updated = $this->model->update($request->all(), ['id' => $id]);
 
+        // delete old images
+        if ($request->has('remove')) {
+            $images = $this->image_model->get(['item_id' => $id])->execute();
+            foreach ($images as $image) {
+                $this->image_model->delete($image->id);
+            }
+        }
+
+        // add new images
         if ($updated) {
+            if ($request->hasFile('images')) {
+                $images = $request->file('images');
+                foreach ($images as $image) {
+                    $this->addImages($image, $id);
+                }
+            }
+
             return redirect()->route('news.show', $id)
-            ->with('flash_message', 'News Item Created Successfully');
+            ->with('flash_message', 'Updated Successfully');
         }
         return back()->withErrors('something went wrong');
     }
 
     public function destroy($id)
     {
-        if ($this->model->delete($id)) {
+        if ($this->model->delete(['id' => $id])) {
+            $this->image_model->delete(['item_id' => $id]);
             return redirect()->route('news.index')
             ->with('flash_message', 'Deleted Successfully');
         }
@@ -137,27 +173,31 @@ class NewsItemController extends Controller
 
     public function searchByTitle(Request $request)
     {
+        // fetch and paginate items
         $page = isset($_GET['p'])?$_GET['p']:0;
-        $items = $this->model->search('title', $request->title);
+        $items = $this->model->search('title', $request->title)->paginate(3,$page)->execute();
+        $count = count($this->model->search('title', $request->title)->execute());
 
         foreach ($items as $item) {
             $images = $this->image_model->get(['item_id' => $item->id]);
             $item->images = objectToArray($images);
         }
-        return view('news.index', compact('items'));
+        return view('news.index', compact('items', 'count'));
     }
 
     public function searchByDateRange(Request $request)
     {
-        $from = Carbon::createFromFormat('Y-m-d', $request->from)->format('Y-m-d H:i:s');
-        $to = Carbon::createFromFormat('Y-m-d', $request->to)->format('Y-m-d H:i:s');
-        $items = $this->model->searchDate($from,$to);
-
+        // fetch and paginate items
+        $page = isset($_GET['p'])?$_GET['p']:0;
+        $from = Carbon::createFromFormat('Y-m-d', $request->from)->format('Y-m-d') . " 00:00:00";
+        $to = Carbon::createFromFormat('Y-m-d', $request->to)->format('Y-m-d') . " 23:59:59";
+        $items = $this->model->searchDate($from,$to)->paginate(3,$page,'created_at')->execute();
+        $count = count($this->model->searchDate($from,$to)->execute());
         foreach ($items as $item) {
             $images = $this->image_model->get(['item_id' => $item->id]);
             $item->images = objectToArray($images);
         }
-        return view('news.index', compact('items'));
+        return view('news.index', compact('items', 'count'));
     }
 
     private function addImages($image, $item_id)
@@ -167,6 +207,7 @@ class NewsItemController extends Controller
        $path = public_path('images');
        $image->move($path, $filename);
 
+       //insert into DB
        $this->image_model->insert([
            'path' => $filename,
            'item_id' => $item_id,

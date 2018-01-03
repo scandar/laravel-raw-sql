@@ -2,10 +2,11 @@
 
 namespace App;
 
-use App\AbstractDB;
+use App\DBModel;
 
-class NewsItem extends AbstractDB
+class NewsItem extends DBModel
 {
+    // set columns names
     protected $fillable = [
         'title',
         'description',
@@ -16,6 +17,7 @@ class NewsItem extends AbstractDB
 
     function __construct()
     {
+        // set table name
         $this->setTable('news_items');
     }
 }

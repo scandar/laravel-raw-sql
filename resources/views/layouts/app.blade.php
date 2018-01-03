@@ -8,10 +8,11 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'News System') }}</title>
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
 </head>
 <body>
     <div id="app">
@@ -72,7 +73,13 @@
         </nav>
         @include('errors.list')
 
-        @yield('content')
+
+        <div class="container">
+            <div class="row">
+                @include('partials.sidebar')
+                @yield('content')
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
