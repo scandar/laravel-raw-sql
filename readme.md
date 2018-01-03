@@ -3,6 +3,7 @@ installation
     configure Database in .env file
 
     run
+        "composer install"
         "php artisan migrate"
         "php artisan db:seed"
         "php artisan serve"
