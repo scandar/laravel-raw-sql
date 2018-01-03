@@ -16,14 +16,18 @@ class NewsItemController extends Controller
 
     public function __construct()
     {
+        // set middlewares
         $this->middleware('auth');
         $this->middleware('isAdmin')->only('edit', 'destroy', 'update');
+
+        // instantiate models
         $this->model = new NewsItem;
         $this->image_model = new Image;
     }
 
     public function index()
     {
+        // fetch and paginate data
         $page = isset($_GET['p'])?$_GET['p']:0;
         $items = $this->model->get()->paginate(3,$page,'created_at')->execute();
         $count = count($this->model->get()->execute());
@@ -47,12 +51,14 @@ class NewsItemController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:10000',
         ]);
+        // set additional data
         $request->request->set('user_id', Auth::user()->id);
         $request->request->set('created_at', Carbon::now()->format('Y-m-d H:i:s'));
         $item_id = $this->model->insert($request->all());
 
-        if ($item_id) {
 
+        if ($item_id) {
+            // insert images
             if ($request->hasFile('images')) {
                $images = $request->file('images');
                foreach ($images as $image) {
@@ -69,19 +75,27 @@ class NewsItemController extends Controller
 
     public function show($id)
     {
+        // validate id
         if (!is_numeric($id)) {
             return redirect(404);
         }
         $item = $this->model->get($id)->execute();
         //should use JOIN instead when implemented
+        //get images
         $images = $this->image_model->get(['item_id' => $id])->execute();
+        // get item count - used to view pagination buttons
         $item = count($item)? $item[0]:$item;
 
-        if ($author = DB::select("SELECT name FROM users WHERE id = ?", [$item->user_id])) {
-            $item->author = $author[0]->name;
+        if (count($item)) {
+            //get author name
+            $author = DB::select("SELECT name FROM users WHERE id = ?", [$item->user_id]);
+            if (count($author)) {
+                $item->author = $author[0]->name;
+            }
         }
 
         if (count($item)) {
+            // convert to array using helper objectToArray()
             $images = objectToArray($images);
 
             //increment view count
@@ -95,9 +109,11 @@ class NewsItemController extends Controller
 
     public function edit($id)
     {
+        // validate id
         if (!is_numeric($id)) {
             return redirect(404);
         }
+        // get item
         $item = $this->model->get($id)->execute();
         $item = count($item)? $item[0]:$item;
 
@@ -157,6 +173,7 @@ class NewsItemController extends Controller
 
     public function searchByTitle(Request $request)
     {
+        // fetch and paginate items
         $page = isset($_GET['p'])?$_GET['p']:0;
         $items = $this->model->search('title', $request->title)->paginate(3,$page)->execute();
         $count = count($this->model->search('title', $request->title)->execute());
@@ -170,6 +187,7 @@ class NewsItemController extends Controller
 
     public function searchByDateRange(Request $request)
     {
+        // fetch and paginate items
         $page = isset($_GET['p'])?$_GET['p']:0;
         $from = Carbon::createFromFormat('Y-m-d', $request->from)->format('Y-m-d') . " 00:00:00";
         $to = Carbon::createFromFormat('Y-m-d', $request->to)->format('Y-m-d') . " 23:59:59";
@@ -189,6 +207,7 @@ class NewsItemController extends Controller
        $path = public_path('images');
        $image->move($path, $filename);
 
+       //insert into DB
        $this->image_model->insert([
            'path' => $filename,
            'item_id' => $item_id,

@@ -143,11 +143,13 @@ class DBModel
 
     protected function setTable($name)
     {
+        // set database table name
         $this->table_name = $name;
     }
 
     protected function checkArray(array $arr)
     {
+        // validate column names
         $this->_keys   = [];
         $this->_values = [];
         $this->_marks  = [];

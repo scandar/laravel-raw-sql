@@ -6,6 +6,7 @@ use App\DBModel;
 
 class NewsItem extends DBModel
 {
+    // set columns names
     protected $fillable = [
         'title',
         'description',
@@ -16,6 +17,7 @@ class NewsItem extends DBModel
 
     function __construct()
     {
+        // set table name
         $this->setTable('news_items');
     }
 }
